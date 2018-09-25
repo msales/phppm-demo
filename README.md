@@ -9,8 +9,10 @@ docker run --rm -it -v /$PWD:/app composer:1.6.1 create-project --prefer-dist la
 ## test standard setup
 ```
 local_port=13370
-docker run --rm -d -v $PWD/laravel-demo3/:/var/www -p $local_port:80 --name phppm phppm/nginx --workers=8 --bootstrap=laravel --app-env=prod
-ab -n 1000 -c 10 http://localhost:$local_port/
+docker run --rm -d -v $PWD/laravel-demo3/:/var/www -p $local_port:80 --name phppm --memory 1G phppm/nginx --workers=2 --bootstrap=laravel --app-env=prod --logging=0 --reload-timeout=3 --max-requests=100
+ab -n 5000 -c 200 http://localhost:$local_port/ |grep -e 'Requests per second' -e 'longest request' &
+sleep 5; curl --max-time 5 http://localhost:$local_port/
+
 docker stop phppm
 ```
 
@@ -18,8 +20,8 @@ docker stop phppm
 ```
 docker build -t phppm-event .
 local_port=13370
-docker run --rm -d -v $PWD/laravel-demo3/:/var/www -p $local_port:80 --name phppm phppm-event --workers=8 --bootstrap=laravel --app-env=prod
-ab -n 1000 -c 10 http://localhost:$local_port/
+docker run --rm -d -v $PWD/laravel-demo3/:/var/www -p $local_port:80 --name phppm --memory 1G phppm-event --workers=2 --bootstrap=laravel --app-env=prod --logging=0 --reload-timeout=3 --max-requests=100
+ab -n 5000 -c 200 http://localhost:$local_port/
 docker stop phppm
 ```
 
