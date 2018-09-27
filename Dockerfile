@@ -17,7 +17,9 @@ COPY --from=builder /lib/libcrypto.so.1.0.0 /lib/
 
 # queue requests in nginx, not on PHP-PM:
 # http://nginx.org/en/docs/http/ngx_http_upstream_module.html
-RUN echo -e 'upstream php-pm {\n  server 127.0.0.1:8080 max_conns=4;\n}' >> /etc/nginx/sites-enabled/default
+# limit requests to what PHP can handle (e.g. avg req: 50ms -> 20req/sec per worker -> max_conns=20*$workers + $workers)
+RUN sed -i -e 's#^server #upstream php-pm {\n  server 127.0.0.1:8080 max_conns=16;\n}\nserver #' /etc/nginx/sites-enabled/default
+RUN sed -i -e 's#http://127.0.0.1:8080#http://php-pm#' /etc/nginx/sites-enabled/default
 
 # enable PHP 'event' library
 RUN echo 'extension=event.so' > /etc/php7/conf.d/01_event.ini
